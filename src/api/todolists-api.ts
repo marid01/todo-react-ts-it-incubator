@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axios, { AxiosResponse } from 'axios'
 
 const instance = axios.create({
     baseURL: 'https://social-network.samuraijs.com/api/1.1/',
@@ -14,13 +14,13 @@ export const todolistsAPI = {
         return instance.get<TodolistType[]>('todo-lists');
     },
     createTodolist(title: string) {
-        return instance.post<{ title: string }, { data: ResponseType<{ item: TodolistType }> }>('todo-lists', {title});
+        return instance.post<{ title: string }, AxiosResponse<ResponseType<{ item: TodolistType }>>>('todo-lists', {title});
     },
     deleteTodolist(id: string) {
         return instance.delete<ResponseType>(`todo-lists/${id}`);
     },
     updateTodolist(id: string, title: string) {
-        return instance.put<{ title: string }, { data: ResponseType }>(`todo-lists/${id}`, {title});
+        return instance.put<{ title: string }, AxiosResponse<ResponseType>>(`todo-lists/${id}`, {title});
     },
     getTasks(todolistId: string) {
         return instance.get<GetTasksResponse>(`todo-lists/${todolistId}/tasks`);
@@ -29,14 +29,41 @@ export const todolistsAPI = {
         return instance.delete<ResponseType>(`todo-lists/${todolistId}/tasks/${taskId}`);
     },
     createTask(todolistId: string, title: string) {
-        return instance.post<{ title: string }, { data: ResponseType<{ item: TaskType }> }>(`todo-lists/${todolistId}/tasks`, {title});
+        return instance.post<{ title: string }, AxiosResponse<ResponseType<{ item: TaskType }>>>(`todo-lists/${todolistId}/tasks`, {title});
     },
     updateTask(todolistId: string, taskId: string, model: UpdateTaskModelType) {
-        return instance.put<UpdateTaskModelType, { data: ResponseType<{ item: TaskType }> }>(`todo-lists/${todolistId}/tasks/${taskId}`, model);
+        return instance.put<UpdateTaskModelType, AxiosResponse<ResponseType<{ item: TaskType }>>>(`todo-lists/${todolistId}/tasks/${taskId}`, model);
     }
 }
 
+export const authAPI = {
+    login(data: LoginType) {
+        return instance.post<LoginType, AxiosResponse<ResponseType<{ userId?: number }>>>('auth/login', data);
+    },
+    me() {
+        return instance.get<ResponseType<AuthMeResponseType>>('auth/me')
+    },
+    logout() {
+        return instance.delete<ResponseType>('auth/login');
+    }
+}
+
+
 // types
+
+export type AuthMeResponseType = {
+    id: number,
+    email: string,
+    login: string
+}
+
+export type LoginType = {
+    email: string,
+    password: string,
+    rememberMe: boolean,
+    captcha?: boolean
+}
+
 export type TodolistType = {
     id: string
     title: string
@@ -46,10 +73,9 @@ export type TodolistType = {
 export type ResponseType<D = {}> = {
     resultCode: number
     messages: Array<string>
-    fieldsErrors: Array<string>
+    // fieldsErrors?: Array<string>
     data: D
 }
-
 
 export enum TaskStatuses {
     New = 0,
